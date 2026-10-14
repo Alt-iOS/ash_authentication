@@ -12,6 +12,8 @@ defmodule AshAuthentication.AddOn.AuditLog.Transformer do
   @doc false
   @impl true
   def after?(AshAuthentication.Strategy.Custom.Transformer), do: true
+  # It tracks every action of the resource, including those Ash adds from `defaults`.
+  def after?(Ash.Resource.Transformers.SetPrimaryActions), do: true
   def after?(_), do: false
 
   @doc false

@@ -98,16 +98,31 @@ defmodule AshAuthentication.Utils do
 
   @doc """
   Used within transformers to optionally build actions as needed.
+
+  An action the resource lists in `defaults` counts as defined: Ash only expands
+  `defaults` into actions in a later transformer, which may run after this one.
   """
   @spec maybe_build_action(Dsl.t(), atom, (map -> map)) :: {:ok, atom | map} | {:error, any}
   def maybe_build_action(dsl_state, action_name, builder) when is_function(builder, 1) do
     with nil <- Resource.Info.action(dsl_state, action_name),
+         false <- default_action?(dsl_state, action_name),
          {:ok, action} <- builder.(dsl_state) do
       {:ok, Transformer.add_entity(dsl_state, [:actions], action)}
     else
       action when is_map(action) -> {:ok, dsl_state}
+      true -> {:ok, dsl_state}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  defp default_action?(dsl_state, action_name) do
+    dsl_state
+    |> Transformer.get_option([:actions], :defaults)
+    |> List.wrap()
+    |> Enum.any?(fn
+      {type, _accept} -> type == action_name
+      type -> type == action_name
+    end)
   end
 
   @doc """

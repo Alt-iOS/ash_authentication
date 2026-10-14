@@ -7,6 +7,17 @@ defmodule AshAuthentication.UtilsTest do
   use ExUnit.Case, async: true
   alias AshAuthentication.Utils
 
+  describe "maybe_build_action/3" do
+    test "builds no action the resource lists in its defaults" do
+      # `Example.OidcConnection` lists `:read` in `defaults`, and its extension builds a read action
+      # for any resource that doesn't define one.
+      read_actions =
+        Enum.filter(Ash.Resource.Info.actions(Example.OidcConnection), &(&1.type == :read))
+
+      assert [%{name: :read}] = read_actions
+    end
+  end
+
   describe "lifetime_to_seconds/1" do
     test "converts integer seconds to seconds" do
       assert Utils.lifetime_to_seconds(30) == 30
